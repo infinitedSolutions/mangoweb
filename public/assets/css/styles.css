@@ -1,0 +1,60 @@
+:root {
+    --primary-color: #4e73df;
+    --secondary-color: #3b4c80;
+  }
+  
+  body {
+    background-color: var(--secondary-color);
+  }
+  
+  .login-container {
+    max-width: 500px;
+    margin: 0 auto;
+    margin-top: 100px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  
+  .login-header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 20px;
+    text-align: center;
+  }
+  
+  .login-body {
+    padding: 30px;
+    background-color: white;
+  }
+  
+  .logo {
+    width: 100px;
+    margin-bottom: 20px;
+  }
+  
+  .card-lote {
+    transition: transform 0.3s;
+    margin-bottom: 20px;
+  }
+  
+  .card-lote:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  @media (max-width: 480px) {
+    .login-container {
+      width: 95%;
+      margin-top: 100px;
+    }
+    .login-body {
+      padding: 20px;
+    }
+    .login-header h2 {
+      font-size: 18px;
+    }
+    .logo {
+      width: 60px;
+    }
+  }

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="assets/img/favicon.ico" type="image/x-icon">
+  <title>Lotes larvados</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/styles.css">
+
+  <!-- update the version number as needed -->
+  <script defer src="/__/firebase/11.5.0/firebase-app-compat.js"></script>
+  <!-- include only the Firebase features as you need -->
+  <script defer src="/__/firebase/11.5.0/firebase-auth-compat.js"></script>
+  <script defer src="/__/firebase/11.5.0/firebase-database-compat.js"></script>
+  <script defer src="/__/firebase/11.5.0/firebase-firestore-compat.js"></script>
+  <script defer src="/__/firebase/11.5.0/firebase-functions-compat.js"></script>
+  <script defer src="/__/firebase/11.5.0/firebase-messaging-compat.js"></script>
+  <script defer src="/__/firebase/11.5.0/firebase-storage-compat.js"></script>
+  <script defer src="/__/firebase/11.5.0/firebase-analytics-compat.js"></script>
+  <script defer src="/__/firebase/11.5.0/firebase-remote-config-compat.js"></script>
+  <script defer src="/__/firebase/11.5.0/firebase-performance-compat.js"></script>
+  <!-- 
+      initialize the SDK after all desired features are loaded, set useEmulator to false
+      to avoid connecting the SDK to running emulators.
+    -->
+  <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+    <!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+
+</head>
+
+<body>
+  <div id="app">
+    <div v-if="!usuario" class="login">
+    <div  class="login login-container">
+      <div class="login-header">
+        <img src="assets/img/logo.png" alt="Logo" class="logo">
+        <h2>Lotes Larvados</h2>
+      </div>
+      <div class="login-body">
+        <form @submit.prevent="iniciarSesion">
+          <div class="mb-3">
+            <label for="email" class="form-label">Correo electrónico</label>
+            <input type="email" class="form-control" id="email" v-model="email" required>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Contraseña</label>
+            <input type="password" class="form-control" id="password" v-model="password" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="fas fa-sign-in-alt"></i> Iniciar sesión
+          </button>
+        </form>
+        <div v-if="error" class="alert alert-danger mt-3">
+          {{ error }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <div v-else>
+      <!-- Navbar -->
+      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+          <a class="navbar-brand" href="#">
+            <img src="assets/img/logo.png" alt="Logo" class="me-2" style="height: 30px;">
+            Sistema de Lotes
+          </a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+              <li class="nav-item">
+                <a class="nav-link" :class="{ 'active': vistaActual === 'listar' }" href="#" @click="cambiarVista('listar')">
+                  <i class="fas fa-list"></i> Listar Lotes
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" :class="{ 'active': vistaActual === 'agregar' }" href="#" @click="cambiarVista('agregar')">
+                  <i class="fas fa-plus-circle"></i> Agregar Lote
+                </a>
+              </li>
+            </ul>
+            <ul class="navbar-nav">
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-user-circle"></i> {{ usuario.email }}
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><a class="dropdown-item" href="#" @click="cerrarSesion"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a></li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+      
+      <!-- Contenido principal -->
+      <div class="container my-4">
+        <!-- Vista Listar -->
+        <div v-if="vistaActual === 'listar'">
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <h2><i class="fas fa-list"></i> Listado de Lotes</h2>
+            </div>
+            <div class="col-md-6">
+              <div class="input-group">
+                <input type="text" class="form-control" placeholder="Buscar por huerto o registro..." v-model="busqueda">
+                <button class="btn btn-outline-secondary" type="button" @click="filtrarLotes">
+                  <i class="fas fa-search"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+           <!-- Vista Principal (cuando está autenticado) -->
+          
+          <div class="row">
+            <div v-for="lote in lotesFiltrados" :key="lote.id" class="col-md-4">
+              <div class="card card-lote">
+                <div class="card-header">
+                  <p class="card-text">
+                  Huerto {{ lote.huerto }}
+                  </p>
+                 
+                </div>
+                <div class="card-body">
+                  <p class="card-text"><strong>Registro: {{ lote.registro }}</strong></p>
+                  <p class="card-text">
+                    <i class="fas fa-box me-2"></i> Empaque: {{ lote.empaque }}
+                  </p>
+                  <p class="card-text">
+                    <i class="fas fa-calendar-alt me-2"></i> Fecha: {{ formatearFecha(lote.fecha) }}
+                  </p>
+                  <p class="card-text">
+                    <i class="fas fa-industry me-2"></i>Tercería: {{ lote.terceria }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+ 
+      
+        
+        <!-- Vista Agregar -->
+        <div v-if="vistaActual === 'agregar'">
+          <h2><i class="fas fa-plus-circle"></i> Agregar Nuevo Lote</h2>
+          <div class="card">
+            <div class="card-body">
+              <form @submit.prevent="agregarLote">
+                <div class="row mb-3">
+                  <div class="col-md-4">
+                    <label class="form-label">TEF:</label>
+                    <input 
+                    type="text" 
+                    class="form-control" 
+                    :value="usuario.displayName" 
+                    :disabled="true" 
+                    required
+                  >
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">Huerto</label>
+                    <input type="text" class="form-control" v-model="nuevoLote.huerto" required>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">Registro</label>
+                    <input type="text" class="form-control" v-model="nuevoLote.registro" required>
+                  </div>
+                </div>
+                <div class="row mb-3">    
+                  <div class="col-md-3">
+                    <label class="form-label">Variedad</label>
+                    <input type="text" class="form-control" v-model="nuevoLote.variedad" required>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Empaque</label>
+                    <input type="text" class="form-control" v-model="nuevoLote.empaque" required>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Estado</label>
+                    <input type="text" class="form-control" v-model="nuevoLote.estado" required>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Municipio</label>
+                    <input type="text" class="form-control" v-model="nuevoLote.municipio" required>
+                  </div>
+                </div>
+                <div class="row mb-3">    
+                  <div class="col-md-4">
+                    <label class="form-label">Fecha</label>
+                    <input type="date" class="form-control" v-model="nuevoLote.fecha" required>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">TMINF</label>
+                    <input type="text" class="form-control" v-model="nuevoLote.tMINF" required>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">CFMN</label>
+                    <input type="text" class="form-control" v-model="nuevoLote.cFMN" required>
+                  </div>
+                </div>
+                <div class="row mb-3">    
+                  <div class="col-md-3">
+                    <label class="form-label">Cajas</label>
+                    <input type="text" class="form-control" v-model="nuevoLote.cajas" required>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Toneladas</label>
+                    <input type="text" class="form-control" v-model="nuevoLote.toneladas" required>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Frutos muestreados</label>
+                    <input type="text" class="form-control" v-model="nuevoLote.frutosMuestreados" required>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Frutos larvados</label>
+                    <input type="text" class="form-control" v-model="nuevoLote.frutosLarvados" required>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Número de larvas</label>
+                    <input type="text" class="form-control" v-model="nuevoLote.nLarvados" required>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">% de infestación</label>
+                    <input type="text" class="form-control" v-model="nuevoLote.porcentajedeInfestacion" required>
+                  </div>
+                </div>
+
+                
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save"></i> Guardar Lote
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/initapp.js"></script>
+  <script src="assets/js/app.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
