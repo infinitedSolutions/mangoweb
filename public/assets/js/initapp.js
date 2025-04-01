@@ -234,13 +234,84 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('Error al agregar el lote');
           }
         };
+
+        //Exportar listado.
+        const exportarExcel =  async () => {
+          if (!lotesFiltrados.value || lotesFiltrados.value.length === 0) {
+            alert("No hay datos para exportar");
+            return;
+          }
+        
+          try {
+            // 1. Preparar los datos filtrados
+            const datosFiltrados = lotesFiltrados.value.map(({ fecha, registro, huerto, empaque }) => ({
+              Fecha: formatearFecha(fecha),
+              Registro: registro,
+              Huerto: huerto,
+              Empaque: empaque
+            }));
+        
+            // 2. Crear un nuevo libro de Excel con XlsxPopulate
+            const workbook = await XlsxPopulate.fromBlankAsync();
+        
+            // 3. Obtener la hoja activa y renombrarla
+            const sheet = workbook.sheet(0).name("Lotes");
+        
+            // 4. Insertar un título en A1 (fila 1, columna 1)
+            sheet.cell("A1").value("Reporte de Lotes Larvados").style({
+              bold: true,
+              fontSize: 16,
+              horizontalAlignment: "center"
+            });
+        
+            // 5. Insertar encabezados de columnas (fila 3)
+            sheet.cell("A3").value("Fecha").style({ bold: true });
+            sheet.cell("B3").value("Registro").style({ bold: true });
+            sheet.cell("C3").value("Huerto").style({ bold: true });
+            sheet.cell("D3").value("Empaque").style({ bold: true });
+        
+            // 6. Insertar los datos (desde la fila 4)
+            datosFiltrados.forEach((lote, index) => {
+              const row = 4 + index;
+              sheet.cell(`A${row}`).value(lote.Fecha);
+              sheet.cell(`B${row}`).value(lote.Registro);
+              sheet.cell(`C${row}`).value(lote.Huerto);
+              sheet.cell(`D${row}`).value(lote.Empaque);
+            });
+        
+            // 7. Insertar una imagen (opcional)
+            // Ejemplo con una imagen en base64 (puedes reemplazarla con tu logo)
+
+        
+            // 8. Ajustar el ancho de las columnas automáticamente
+            sheet.usedRange().style("horizontalAlignment", "center");
+            sheet.column("A").width(15); // Fecha
+            sheet.column("B").width(20); // Registro
+            sheet.column("C").width(20); // Huerto
+            sheet.column("D").width(15); // Empaque
+        
+            // 9. Descargar el archivo
+            const blob = await workbook.outputAsync();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "lotes_larvados.xlsx";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        
+          } catch (err) {
+            console.error("Error al exportar a Excel:", err);
+            alert("Hubo un error al generar el reporte.");
+          }
+        };
         
 
         // Lifecycle hooks
         onMounted(() => {
           firebase.auth().onAuthStateChanged(user => {
-            usuario.value = user;
-           
+            usuario.value = user;     
             if (user) {
               cargarLotes();
             }
@@ -268,7 +339,8 @@ document.addEventListener('DOMContentLoaded', function () {
           cerrarSesion,
           cambiarVista,
           formatearFecha,
-          agregarLote
+          agregarLote,
+          exportarExcel
         };
       }
     }).mount('#app');
