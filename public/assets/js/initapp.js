@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const busqueda = ref('');
         const cargando = ref(false);
         let unsubscribeLotes = null;
+        const downloadUrl = ref(null);
 
         // Nuevo lote
         const nuevoLote = ref({
@@ -110,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const formatearFecha = (timestamp) => {
           if (!timestamp) return 'Sin fecha';
-        
+
           // Si es un objeto Timestamp de Firebase (tiene el método toDate)
           if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp) {
             const fecha = timestamp.toDate();
@@ -128,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function () {
               return `${fecha.getDate().toString().padStart(2, '0')}/${(fecha.getMonth() + 1).toString().padStart(2, '0')}/${fecha.getFullYear().toString().slice(-2)}`;
             }
           }
-        
+
           return 'Formato de fecha no válido';
         };
 
@@ -154,26 +155,27 @@ document.addEventListener('DOMContentLoaded', function () {
               cargando.value = false;
             });
         };
+
         function obtenerRangoSemana(fecha) {
           // Convertir la fecha a un objeto Date
           const fechaBase = new Date(fecha);
-          
+
           // Obtener el día de la semana (0 = Domingo, 1 = Lunes, ..., 6 = Sábado)
           const diaSemana = fechaBase.getDay();
-      
+
           // Ajustar para que la semana inicie en Lunes (1) y termine en Domingo (7)
           const lunes = new Date(fechaBase);
           lunes.setDate(fechaBase.getDate() - ((diaSemana + 6) % 7)); // Retroceder hasta el lunes
-      
+
           const domingo = new Date(lunes);
           domingo.setDate(lunes.getDate() + 6); // Avanzar 6 días hasta el domingo
-      
+
           // Formatear las fechas como "DD/MM/YYYY"
-          const formatoFecha = (date) => 
-              date.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
-      
+          const formatoFecha = (date) =>
+            date.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
           return `Del ${formatoFecha(lunes)} al ${formatoFecha(domingo)}`;
-      }
+        }
 
         const agregarLote = async () => {
           try {
@@ -188,14 +190,14 @@ document.addEventListener('DOMContentLoaded', function () {
             nuevoLote.value.userUid = usuario?.value.uid || '';
             nuevoLote.value.periodo = obtenerRangoSemana(new Date(nuevoLote.value.fecha));
 
-        
+
             // Guardar en Firestore con fecha en milisegundos
             await firebase.firestore().collection('lotes_larvados').add({
               ...nuevoLote.value,
               fecha: new Date(nuevoLote.value.fecha).getTime(), // Equivalente a ToUnixTimeMilliseconds() en C#
               fechaGuardado: Date.now()
             });
-        
+
             // Limpiar formulario
             nuevoLote.value = {
               cFMN: '',
@@ -220,13 +222,13 @@ document.addEventListener('DOMContentLoaded', function () {
               userUid: usuario?.value.uid || '',
               variedad: ''
             };
-        
+
             // Recargar lotes
             await cargarLotes();
-        
+
             // Cambiar a vista de listado
             vistaActual.value = 'listar';
-        
+
             // Mostrar alerta de éxito
             alert('Lote agregado correctamente');
           } catch (err) {
@@ -236,82 +238,106 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         //Exportar listado.
-        const exportarExcel =  async () => {
-          if (!lotesFiltrados.value || lotesFiltrados.value.length === 0) {
+        const exportarExcel = async () => {
+
+          if (!lotes.value || lotes.value.length === 0) {
             alert("No hay datos para exportar");
             return;
           }
-        
+
           try {
             // 1. Preparar los datos filtrados
-            const datosFiltrados = lotesFiltrados.value.map(({ fecha, registro, huerto, empaque }) => ({
+            const datosFiltrados = lotes.value.map(({ fecha, registro, huerto, empaque }) => ({
               Fecha: formatearFecha(fecha),
               Registro: registro,
               Huerto: huerto,
               Empaque: empaque
             }));
-        
+
+
             // 2. Crear un nuevo libro de Excel con XlsxPopulate
             const workbook = await XlsxPopulate.fromBlankAsync();
-        
+
             // 3. Obtener la hoja activa y renombrarla
             const sheet = workbook.sheet(0).name("Lotes");
-        
+
+
             // 4. Insertar un título en A1 (fila 1, columna 1)
-            sheet.cell("A1").value("Reporte de Lotes Larvados").style({
+
+            // Combinar celdas de A2 a D2
+            sheet.range("A1:D1").merged(true);
+
+            // Insertar el texto en A2 (la celda principal después de la fusión)
+            sheet.cell("A1").value("Lista de Lotes Larvados").style({
               bold: true,
               fontSize: 16,
-              horizontalAlignment: "center"
+              horizontalAlignment: "center", // Centrar horizontalmente
+              verticalAlignment: "center" // Centrar verticalmente
             });
-        
+
+            sheet.range("A2:D2") .style({
+              bold: true,
+              fontSize: 16,
+              horizontalAlignment: "center",
+              fill: "000000", // Fondo negro
+              fontColor: "FFFFFF", // Texto blanco
+              border: {
+                top: { style: "thin", color: "FFFFFF" },
+                bottom: { style: "thin", color: "FFFFFF" },
+                left: { style: "thin", color: "FFFFFF" },
+                right: { style: "thin", color: "FFFFFF" },
+            }
+          });;
+
             // 5. Insertar encabezados de columnas (fila 3)
-            sheet.cell("A3").value("Fecha").style({ bold: true });
-            sheet.cell("B3").value("Registro").style({ bold: true });
-            sheet.cell("C3").value("Huerto").style({ bold: true });
-            sheet.cell("D3").value("Empaque").style({ bold: true });
-        
+            sheet.cell("A2").value("Fecha").style({ bold: true });
+            sheet.cell("B2").value("Registro").style({ bold: true });
+            sheet.cell("C2").value("Huerto").style({ bold: true });
+            sheet.cell("D2").value("Empaque").style({ bold: true });
+
             // 6. Insertar los datos (desde la fila 4)
             datosFiltrados.forEach((lote, index) => {
-              const row = 4 + index;
+              const row = 3 + index;
+              let color = row % 2 === 0 ? "E0E0E0" : "FFFFFF"; // Filas pares grises, impares blancas
+              sheet.range(`A${row}:D${row}`).style({
+                fill: color, // Color de fondo
+                fontColor: "000000", // Texto negro
+                border: true, // Agregar bordes en todas las celdas
+            });
+
               sheet.cell(`A${row}`).value(lote.Fecha);
               sheet.cell(`B${row}`).value(lote.Registro);
               sheet.cell(`C${row}`).value(lote.Huerto);
               sheet.cell(`D${row}`).value(lote.Empaque);
             });
-        
+
             // 7. Insertar una imagen (opcional)
             // Ejemplo con una imagen en base64 (puedes reemplazarla con tu logo)
 
-        
+
             // 8. Ajustar el ancho de las columnas automáticamente
             sheet.usedRange().style("horizontalAlignment", "center");
             sheet.column("A").width(15); // Fecha
             sheet.column("B").width(20); // Registro
-            sheet.column("C").width(20); // Huerto
-            sheet.column("D").width(15); // Empaque
-        
+            sheet.column("C").width(40); // Huerto
+            sheet.column("D").width(50); // Empaque
+
             // 9. Descargar el archivo
             const blob = await workbook.outputAsync();
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "lotes_larvados.xlsx";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        
+            const fileBlob = new Blob([blob], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+            downloadUrl.value = URL.createObjectURL(fileBlob);
+
           } catch (err) {
             console.error("Error al exportar a Excel:", err);
             alert("Hubo un error al generar el reporte.");
           }
         };
-        
+
 
         // Lifecycle hooks
         onMounted(() => {
           firebase.auth().onAuthStateChanged(user => {
-            usuario.value = user;     
+            usuario.value = user;
             if (user) {
               cargarLotes();
             }
@@ -340,7 +366,8 @@ document.addEventListener('DOMContentLoaded', function () {
           cambiarVista,
           formatearFecha,
           agregarLote,
-          exportarExcel
+          exportarExcel,
+          downloadUrl
         };
       }
     }).mount('#app');
