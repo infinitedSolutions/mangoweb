@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function () {
       'performance',
     ].filter(feature => typeof app[feature] === 'function');
 
-    const { createApp, ref, onMounted, onUnmounted, computed } = Vue;
+    const { createApp, reactive, ref, onMounted, onUnmounted, computed } = Vue;
 
     createApp({
       setup() {
@@ -44,10 +44,27 @@ document.addEventListener('DOMContentLoaded', function () {
         const cargando = ref(false);
         let unsubscribeLotes = null;
         const downloadUrl = ref(null);
+        const errorRegistro = ref(null);
+        const errorHuerto = ref(null);
+        const errorVariedad = ref(null);
+        const errorEmpaque = ref(null);
+        const errorEstado = ref(null);
+        const errorMunicipio = ref(null);
+        const errorFecha = ref(null);
+        const errorTMINF = ref(null);
+        const errorCajas = ref(null);
+        const errorFrutosMuestreados = ref(null);
+        const errorFrutosLarvados = ref(null);
+        const errorToneladas = ref(null);
+        const errorNumeroLarvas = ref(null);
+
+
+
+
 
         // Nuevo lote
-        const nuevoLote = ref({
-          cFMN: '',
+        const nuevoLote = reactive({
+          cFMN: 'N/A',
           cajas: '',
           empaque: '',
           estado: '',
@@ -67,8 +84,14 @@ document.addEventListener('DOMContentLoaded', function () {
           terceria: 'normich',
           toneladas: '',
           userUid: usuario?.uid || '', // Asegúrate de que el campo sea `uid`
-          variedad: ''
+          variedad: '',
         });
+
+
+
+
+
+
 
         const filtrarLotes = () => {
           // No necesitamos hacer nada aquí porque usamos computed property
@@ -133,6 +156,161 @@ document.addEventListener('DOMContentLoaded', function () {
           return 'Formato de fecha no válido';
         };
 
+        const validarRegistro = () => {
+          const longitud = nuevoLote.registro.length;
+          if (longitud !== 14 && longitud !== 15) {
+            errorRegistro.value = "El registro debe tener 14 o 15 caracteres.";
+
+          } else {
+            errorRegistro.value = null;
+          }
+        };
+
+
+
+
+        const validarHuerto = () => {
+          const longitud = nuevoLote.huerto.trim().length;
+          if (longitud == 0) {
+            errorHuerto.value = "El campo es requerido";
+
+          } else {
+            errorHuerto.value = null;
+          }
+        };
+
+        const validarVariedad = () => {
+          const longitud = nuevoLote.variedad.trim().length;
+          if (longitud == 0) {
+            errorVariedad.value = "Seleccione una variedad.";
+          } else {
+            errorVariedad.value = null;
+          }
+        };
+
+        const validarEmpaque = () => {
+          const longitud = nuevoLote.empaque.trim().length;
+          if (longitud == 0) {
+            errorEmpaque.value = "El campo es requerido";
+          } else {
+            errorEmpaque.value = null;
+          }
+        };
+
+        const validarEstado = () => {
+          const longitud = nuevoLote.estado.trim().length;
+          if (longitud == 0) {
+            errorEstado.value = "El campo es requerido";
+          } else {
+            errorEstado.value = null;
+          }
+        };
+
+        const validarMunicipio = () => {
+          const longitud = nuevoLote.municipio.trim().length;
+          if (longitud == 0) {
+            errorMunicipio.value = "El campo es requerido";
+          } else {
+            errorMunicipio.value = null;
+          }
+        };
+
+
+        const validarFecha = () => {
+          const fechaEntrada = new Date(nuevoLote.fecha);
+          // Obtener la fecha actual
+          const fechaActual = new Date();
+
+          // Crear la fecha para el 1 de enero de este año
+          const primerEnero = new Date(fechaActual.getFullYear(), 0, 1);  // Año actual, mes 0 (enero), día 1
+
+          // Verificar que la fecha de entrada esté entre el 1 de enero y la fecha actual
+          if (fechaEntrada >= primerEnero && fechaEntrada <= fechaActual) {
+            errorFecha.value = null;  // La fecha es válida
+          } else {
+            errorFecha.value = "Fecha no validad";  // La fecha no está dentro del rango
+          }
+        };
+
+        const validarTMINF = () => {
+          const longitud = nuevoLote.tMINF.trim().length;
+          if (longitud == 0) {
+            errorTMINF.value = "El campo es requerido";
+          } else {
+            errorTMINF.value = null;
+          }
+        };
+
+        const validarCFMN = () => {
+          const longitud = nuevoLote.cFMN.trim().length;
+          if (longitud == 0) {
+            nuevoLote.cFMN = "N/A";
+          }
+        };
+
+        const validarCajas = () => {
+          const num = Number(nuevoLote.cajas.trim());
+          if (!isNaN(num) && nuevoLote.cajas.trim() !== '') {
+            errorCajas.value = null;
+          } else {
+            errorCajas.value = "No es un número valido";
+          }
+        };
+
+        const validarToneladas = () => {
+          const num = Number(nuevoLote.toneladas.trim());
+          if (!isNaN(num) && nuevoLote.toneladas.trim() !== '') {
+            errorToneladas.value = null;
+          } else {
+            errorToneladas.value = "No es un número valido";
+          }
+        };
+
+        const validarFrutosMuestreados = () => {
+          const num = Number(nuevoLote.frutosMuestrados.trim());
+          if (!isNaN(num) && nuevoLote.frutosMuestrados.trim() !== '') {
+            errorFrutosMuestreados.value = null;
+          } else {
+            errorFrutosMuestreados.value = "No es un número valido";
+          }
+          obtenerPorcentaje();
+        };
+
+        const validarFrutosLarvados = () => {
+          const num = Number(nuevoLote.frutosLarvados.trim());
+          if (!isNaN(num) && nuevoLote.frutosLarvados.trim() !== '') {
+            errorFrutosLarvados.value = null;
+          } else {
+            errorFrutosLarvados.value = "No es un número valido";
+          }
+          obtenerPorcentaje();
+        };
+
+        const validarNumeroDeLarvas = () => {
+          const num = Number(nuevoLote.nLarvados.trim());
+          if (!isNaN(num) && nuevoLote.nLarvados.trim() !== '') {
+            errorNumeroLarvas.value = null;
+          } else {
+            errorNumeroLarvas.value = "No es un número valido";
+          }
+
+        };
+
+        const obtenerPorcentaje = () => {
+          const frutosLarvados = Number(nuevoLote.frutosLarvados.trim());
+          const frutosMuestreados = Number(nuevoLote.frutosMuestrados.trim());
+
+          // Validamos que sean números válidos y que frutosMuestreados no sea 0 (para evitar división por 0)
+          if (!isNaN(frutosMuestreados) && frutosMuestreados > 0 && !isNaN(frutosLarvados) && frutosLarvados >= 0) {
+            nuevoLote.porcentajedeInfestacion = ((frutosLarvados / frutosMuestreados) * 100).toFixed(2);
+          } else {
+            nuevoLote.porcentajedeInfestacion = "0.00"; // Se mantiene formato con dos decimales
+          }
+        };
+
+
+
+
         const cargarLotes = () => {
           cargando.value = true;
 
@@ -180,15 +358,15 @@ document.addEventListener('DOMContentLoaded', function () {
         const agregarLote = async () => {
           try {
             // Asegurar que los valores numéricos sean correctamente convertidos
-            nuevoLote.value.cajas = Number(nuevoLote.value.cajas);
-            nuevoLote.value.nLarvados = Number(nuevoLote.value.nLarvados);
-            nuevoLote.value.frutosLarvados = Number(nuevoLote.value.frutosLarvados);
-            nuevoLote.value.frutosMuestrados = Number(nuevoLote.value.frutosMuestrados);
-            nuevoLote.value.porcentajedeInfestacion = Number(nuevoLote.value.porcentajedeInfestacion);
-            nuevoLote.value.toneladas = Number(nuevoLote.value.toneladas);
+            nuevoLote.value.cajas = Number(nuevoLote.cajas);
+            nuevoLote.value.nLarvados = Number(nuevoLote.nLarvados);
+            nuevoLote.value.frutosLarvados = Number(nuevoLote.frutosLarvados);
+            nuevoLote.value.frutosMuestrados = Number(nuevoLote.frutosMuestrados);
+            nuevoLote.value.porcentajedeInfestacion = Number(nuevoLote.porcentajedeInfestacion);
+            nuevoLote.value.toneladas = Number(nuevoLote.toneladas);
             nuevoLote.value.tEF = usuario?.value.displayName || '';
             nuevoLote.value.userUid = usuario?.value.uid || '';
-            nuevoLote.value.periodo = obtenerRangoSemana(new Date(nuevoLote.value.fecha));
+            nuevoLote.value.periodo = obtenerRangoSemana(new Date(nuevoLote.fecha));
 
 
             // Guardar en Firestore con fecha en milisegundos
@@ -275,7 +453,7 @@ document.addEventListener('DOMContentLoaded', function () {
               verticalAlignment: "center" // Centrar verticalmente
             });
 
-            sheet.range("A2:D2") .style({
+            sheet.range("A2:D2").style({
               bold: true,
               fontSize: 16,
               horizontalAlignment: "center",
@@ -286,8 +464,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 bottom: { style: "thin", color: "FFFFFF" },
                 left: { style: "thin", color: "FFFFFF" },
                 right: { style: "thin", color: "FFFFFF" },
-            }
-          });;
+              }
+            });;
 
             // 5. Insertar encabezados de columnas (fila 3)
             sheet.cell("A2").value("Fecha").style({ bold: true });
@@ -303,7 +481,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 fill: color, // Color de fondo
                 fontColor: "000000", // Texto negro
                 border: true, // Agregar bordes en todas las celdas
-            });
+              });
 
               sheet.cell(`A${row}`).value(lote.Fecha);
               sheet.cell(`B${row}`).value(lote.Registro);
@@ -367,7 +545,34 @@ document.addEventListener('DOMContentLoaded', function () {
           formatearFecha,
           agregarLote,
           exportarExcel,
-          downloadUrl
+          downloadUrl,
+          validarHuerto,
+          errorHuerto,
+          validarRegistro,
+          errorRegistro,
+          validarVariedad,
+          errorVariedad,
+          validarEmpaque,
+          errorEmpaque,
+          validarEstado,
+          errorEstado,
+          validarMunicipio,
+          errorMunicipio,
+          validarFecha,
+          errorFecha,
+          validarTMINF,
+          errorTMINF,
+          validarCFMN,
+          validarCajas,
+          errorCajas,
+          validarFrutosMuestreados,
+          errorFrutosMuestreados,
+          validarFrutosLarvados,
+          errorFrutosLarvados,
+          validarToneladas,
+          errorToneladas,
+          validarNumeroDeLarvas,
+          errorNumeroLarvas
         };
       }
     }).mount('#app');

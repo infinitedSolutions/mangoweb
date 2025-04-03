@@ -90,7 +90,7 @@
               </li>
               <li class="nav-item">
                 <a class="nav-link" :class="{ 'active': vistaActual === 'exportar' }" href="#" @click="cambiarVista('exportar')">
-                  <i class="fas fa-file-excel"></i> Agregar Lote
+                  <i class="fas fa-file-excel"></i> Listado
                 </a>
               </li>
             </ul>
@@ -185,69 +185,119 @@
                   </div>
                   <div class="col-md-4">
                     <label class="form-label">Huerto</label>
-                    <input type="text" class="form-control" v-model="nuevoLote.huerto" required>
+                    <input type="text" class="form-control" v-model="nuevoLote.huerto" @blur="validarHuerto()" required>
+                    <div v-if="errorHuerto" :class="{ 'alert alert-danger': errorHuerto != null }">
+                      {{ errorHuerto }}
+                    </div>
                   </div>
                   <div class="col-md-4">
                     <label class="form-label">Registro</label>
-                    <input type="text" class="form-control" v-model="nuevoLote.registro" required>
+                    <input type="text" class="form-control" v-model="nuevoLote.registro"  @blur="validarRegistro()" required>
+                    <div v-if="errorRegistro" :class="{ 'alert alert-danger': errorRegistro != null }">
+                      {{ errorRegistro }}
+                    </div>
                   </div>
                 </div>
                 <div class="row mb-3">    
                   <div class="col-md-3">
                     <label class="form-label">Variedad</label>
-                    <input type="text" class="form-control" v-model="nuevoLote.variedad" required>
+                      <select v-model="nuevoLote.variedad" class="form-select" @blur="validarVariedad()">
+                        <option disabled value="">Selecciona una variedad</option>
+                        <option value="ATAULFO">ATAULFO</option>
+                        <option value="HADEN">HADEN</option>
+                        <option value="FRANCIS">FRANCIS</option>
+                        <option value="KEITT">KEITT</option>
+                        <option value="KENT">KENT</option>
+                        <option value="MANILA">MANILA</option>
+                        <option value="OSTEEN">OSTEEN</option>
+                        <option value="PALMER">PALMER</option>
+                        <option value="TOMMY ATKINS">TOMMY ATKINS</option>
+                      </select>
+                    <div v-if="errorVariedad" :class="{ 'alert alert-danger': errorVariedad != null }">
+                      {{ errorVariedad }}
+                    </div>
                   </div>
                   <div class="col-md-3">
                     <label class="form-label">Empaque</label>
-                    <input type="text" class="form-control" v-model="nuevoLote.empaque" required>
+                    <input type="text" class="form-control" v-model="nuevoLote.empaque" @blur="validarEmpaque()" required>
+                    <div v-if="errorEmpaque" :class="{ 'alert alert-danger': errorEmpaque != null }">
+                      {{ errorEmpaque }}
+                    </div>
                   </div>
                   <div class="col-md-3">
                     <label class="form-label">Estado</label>
-                    <input type="text" class="form-control" v-model="nuevoLote.estado" required>
+                    <input type="text" class="form-control" v-model="nuevoLote.estado" @blur="validarEstado()" required>
+                    <div v-if="errorEstado" :class="{ 'alert alert-danger': errorEstado != null }">
+                      {{ errorEstado }}
+                    </div>
                   </div>
                   <div class="col-md-3">
                     <label class="form-label">Municipio</label>
-                    <input type="text" class="form-control" v-model="nuevoLote.municipio" required>
+                    <input type="text" class="form-control" v-model="nuevoLote.municipio" @blur="validarMunicipio()" required>
+                    <div v-if="errorMunicipio" :class="{ 'alert alert-danger': errorMunicipio != null }">
+                      {{ errorMunicipio }}
+                    </div>
                   </div>
                 </div>
                 <div class="row mb-3">    
                   <div class="col-md-4">
                     <label class="form-label">Fecha</label>
-                    <input type="date" class="form-control" v-model="nuevoLote.fecha" required>
+                    <input type="date" class="form-control" v-model="nuevoLote.fecha" @blur="validarFecha()" required>
+                    <div v-if="errorFecha" :class="{ 'alert alert-danger': errorFecha != null }">
+                      {{ errorFecha }}
+                    </div>
                   </div>
                   <div class="col-md-4">
                     <label class="form-label">TMINF</label>
-                    <input type="text" class="form-control" v-model="nuevoLote.tMINF" required>
+                    <input type="text" class="form-control" v-model="nuevoLote.tMINF" @blur="validarTMINF()" required>
+                    <div v-if="errorTMINF" :class="{ 'alert alert-danger': errorTMINF != null }">
+                      {{ errorTMINF }}
+                    </div>
                   </div>
                   <div class="col-md-4">
                     <label class="form-label">CFMN</label>
-                    <input type="text" class="form-control" v-model="nuevoLote.cFMN" required>
+                    <input type="text" class="form-control" v-model="nuevoLote.cFMN" @blur="validarCFMN()">
                   </div>
                 </div>
                 <div class="row mb-3">    
                   <div class="col-md-3">
                     <label class="form-label">Cajas</label>
-                    <input type="text" class="form-control" v-model="nuevoLote.cajas" required>
+                    <input type="text" class="form-control" v-model="nuevoLote.cajas" @blur="validarCajas()" required>
+                    <div v-if="errorCajas" :class="{ 'alert alert-danger': errorCajas != null }">
+                      {{ errorCajas }}
+                    </div>
                   </div>
                   <div class="col-md-3">
                     <label class="form-label">Toneladas</label>
-                    <input type="text" class="form-control" v-model="nuevoLote.toneladas" required>
+                    <input type="text" class="form-control" v-model="nuevoLote.toneladas" @blur="validarToneladas()" required>
+                    <div v-if="errorToneladas" :class="{ 'alert alert-danger': errorToneladas != null }">
+                      {{ errorToneladas }}
+                    </div>
                   </div>
                   <div class="col-md-3">
                     <label class="form-label">Frutos muestreados</label>
-                    <input type="text" class="form-control" v-model="nuevoLote.frutosMuestreados" required>
+                    <input type="text" class="form-control" v-model="nuevoLote.frutosMuestrados" @blur="validarFrutosMuestreados()" required>
+                    <div v-if="errorFrutosMuestreados" :class="{ 'alert alert-danger': errorFrutosMuestreados != null }">
+                      {{ errorFrutosMuestreados }}
+                    </div>
                   </div>
                   <div class="col-md-3">
                     <label class="form-label">Frutos larvados</label>
-                    <input type="text" class="form-control" v-model="nuevoLote.frutosLarvados" required>
+                    <input type="text" class="form-control" v-model="nuevoLote.frutosLarvados" @blur="validarFrutosLarvados()" required>
+                    <div v-if="errorFrutosLarvados" :class="{ 'alert alert-danger': errorFrutosLarvados != null }">
+                      {{ errorFrutosLarvados }}
+                    </div>
                   </div>
                   <div class="col-md-3">
                     <label class="form-label">Número de larvas</label>
-                    <input type="text" class="form-control" v-model="nuevoLote.nLarvados" required>
+                    <input type="text" class="form-control" v-model="nuevoLote.nLarvados" @blur="validarNumeroDeLarvas()" required>
+                    <div v-if="errorNumeroLarvas" :class="{ 'alert alert-danger': errorNumeroLarvas != null }">
+                      {{ errorNumeroLarvas }}
+                    </div>
                   </div>
                   <div class="col-md-3">
                     <label class="form-label">% de infestación</label>
-                    <input type="text" class="form-control" v-model="nuevoLote.porcentajedeInfestacion" required>
+                    <input type="text" class="form-control" v-model="nuevoLote.porcentajedeInfestacion" disabled>
                   </div>
                 </div>
 
